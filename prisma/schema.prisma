@@ -1,14 +1,14 @@
+// Prisma Schema para la plataforma chambita
+// Basado en Informe_Especificacion_Datos_Plataforma_Servicios_NestJS_MySQL (1).pdf
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
-
-// ----------------------------------------------------
-// ENUMS
-// ----------------------------------------------------
 
 enum Role {
   CLIENTE
@@ -21,12 +21,8 @@ enum PublicacionEstado {
   COMPLETADA
 }
 
-// ----------------------------------------------------
-// MODELOS / TABLAS
-// ----------------------------------------------------
-
 model Usuario {
-  id                    String            @id @default(uuid())
+  id                    String            @id @default(uuid()) @db.Char(36)
   nombre                String            @db.VarChar(100)
   apellido              String            @db.VarChar(100)
   email                 String            @unique @db.VarChar(150)
@@ -35,9 +31,9 @@ model Usuario {
   rol                   Role
   fotoUrl               String?           @db.Text
   activo                Boolean           @default(true)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  
+  createdAt             DateTime          @default(now()) @db.DateTime(3)
+  updatedAt             DateTime          @updatedAt @db.DateTime(3)
+
   perfilTrabajador      PerfilTrabajador?
   publicaciones         Publicacion[]
   resenasComoCliente    Resena[]          @relation("ResenasCliente")
@@ -45,81 +41,85 @@ model Usuario {
   refreshTokens         RefreshToken[]
 
   @@index([rol])
+  @@map("usuarios")
 }
 
 model PerfilTrabajador {
-  id            String             @id @default(uuid())
-  usuarioId     String             @unique
+  id            String             @id @default(uuid()) @db.Char(36)
+  usuarioId     String             @unique @db.Char(36)
   descripcion   String?            @db.Text
   experiencia   String?            @db.Text
   zonaCobertura String             @db.VarChar(150)
   disponible    Boolean            @default(true)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  
-  usuario       Usuario            @relation(fields: [usuarioId], references: [id])
+  createdAt     DateTime           @default(now()) @db.DateTime(3)
+  updatedAt     DateTime           @updatedAt @db.DateTime(3)
+
+  usuario       Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   oficios       TrabajadorOficio[]
 
   @@index([zonaCobertura])
   @@index([disponible])
+  @@map("perfiles_trabajador")
 }
 
 model Categoria {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Char(36)
   nombre      String   @unique @db.VarChar(100)
   descripcion String?  @db.Text
   activo      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime @default(now()) @db.DateTime(3)
+
   oficios     Oficio[]
 
   @@index([activo])
+  @@map("categorias")
 }
 
 model Oficio {
-  id            String             @id @default(uuid())
-  categoriaId   String
-  nombre        String             @unique @db.VarChar(100)
-  descripcion   String?            @db.Text
-  activo        Boolean            @default(true)
-  createdAt     DateTime           @default(now())
-  
-  categoria     Categoria          @relation(fields: [categoriaId], references: [id])
-  trabajadores  TrabajadorOficio[]
+  id           String             @id @default(uuid()) @db.Char(36)
+  categoriaId  String             @db.Char(36)
+  nombre       String             @unique @db.VarChar(100)
+  descripcion  String?            @db.Text
+  activo       Boolean            @default(true)
+  createdAt    DateTime           @default(now()) @db.DateTime(3)
+
+  categoria    Categoria          @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  trabajadores TrabajadorOficio[]
   publicaciones Publicacion[]
 
   @@index([categoriaId])
   @@index([activo])
+  @@map("oficios")
 }
 
 model TrabajadorOficio {
-  trabajadorId String
-  oficioId     String
+  trabajadorId String           @db.Char(36)
+  oficioId     String           @db.Char(36)
   principal    Boolean          @default(false)
-  createdAt    DateTime         @default(now())
-  
-  trabajador   PerfilTrabajador @relation(fields: [trabajadorId], references: [id])
-  oficio       Oficio           @relation(fields: [oficioId], references: [id])
+  createdAt    DateTime         @default(now()) @db.DateTime(3)
+
+  trabajador   PerfilTrabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
+  oficio       Oficio           @relation(fields: [oficioId], references: [id], onDelete: Restrict)
 
   @@id([trabajadorId, oficioId])
   @@index([oficioId])
-  @@index([trabajadorId])
+  @@map("trabajador_oficios")
 }
 
 model Publicacion {
-  id          String            @id @default(uuid())
-  clienteId   String
-  oficioId    String
+  id          String            @id @default(uuid()) @db.Char(36)
+  clienteId   String            @db.Char(36)
+  oficioId    String            @db.Char(36)
   titulo      String            @db.VarChar(150)
   descripcion String            @db.Text
   ubicacion   String            @db.VarChar(200)
   presupuesto Decimal?          @db.Decimal(10, 2)
   estado      PublicacionEstado @default(ABIERTA)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  
-  cliente     Usuario           @relation(fields: [clienteId], references: [id])
-  oficio      Oficio            @relation(fields: [oficioId], references: [id])
+  createdAt   DateTime          @default(now()) @db.DateTime(3)
+  updatedAt   DateTime          @updatedAt @db.DateTime(3)
+
+  cliente     Usuario           @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  oficio      Oficio            @relation(fields: [oficioId], references: [id], onDelete: Restrict)
   resena      Resena?
 
   @@index([clienteId])
@@ -127,36 +127,38 @@ model Publicacion {
   @@index([estado])
   @@index([ubicacion])
   @@index([createdAt])
+  @@map("publicaciones")
 }
 
 model Resena {
-  id            String      @id @default(uuid())
-  clienteId     String
-  trabajadorId  String
-  publicacionId String      @unique
-  calificacion  Int         @db.SmallInt
+  id            String      @id @default(uuid()) @db.Char(36)
+  clienteId     String      @db.Char(36)
+  trabajadorId  String      @db.Char(36)
+  publicacionId String      @unique @db.Char(36)
+  calificacion  Int         @db.TinyInt
   comentario    String?     @db.Text
-  createdAt     DateTime    @default(now())
-  
-  cliente       Usuario     @relation("ResenasCliente", fields: [clienteId], references: [id])
-  trabajador    Usuario     @relation("ResenasTrabajador", fields: [trabajadorId], references: [id])
-  publicacion   Publicacion @relation(fields: [publicacionId], references: [id])
+  createdAt     DateTime    @default(now()) @db.DateTime(3)
+
+  cliente       Usuario     @relation("ResenasCliente", fields: [clienteId], references: [id], onDelete: Restrict)
+  trabajador    Usuario     @relation("ResenasTrabajador", fields: [trabajadorId], references: [id], onDelete: Restrict)
+  publicacion   Publicacion @relation(fields: [publicacionId], references: [id], onDelete: Restrict)
 
   @@index([trabajadorId])
   @@index([clienteId])
-  @@index([publicacionId])
+  @@map("resenas")
 }
 
 model RefreshToken {
-  id        String    @id @default(uuid())
-  usuarioId String
+  id        String    @id @default(uuid()) @db.Char(36)
+  usuarioId String    @db.Char(36)
   tokenHash String    @db.VarChar(255)
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
-  
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  expiresAt DateTime  @db.DateTime(3)
+  revokedAt DateTime? @db.DateTime(3)
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId])
   @@index([expiresAt])
+  @@map("refresh_tokens")
 }
