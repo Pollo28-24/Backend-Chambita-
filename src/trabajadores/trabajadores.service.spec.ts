@@ -1,0 +1,82 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { TrabajadoresService } from './trabajadores.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { BadRequestException } from '@nestjs/common';
+
+describe('TrabajadoresService', () => {
+  let service: TrabajadoresService;
+
+  const mockPerfilTrabajador = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  };
+
+  const mockTrabajadorOficio = {
+    deleteMany: jest.fn(),
+    createMany: jest.fn(),
+  };
+
+  const mockPrismaService = {
+    perfilTrabajador: mockPerfilTrabajador,
+    trabajadorOficio: mockTrabajadorOficio,
+    $transaction: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    mockPrismaService.$transaction.mockImplementation(
+      (cb: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+        cb(mockPrismaService),
+    );
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        TrabajadoresService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<TrabajadoresService>(TrabajadoresService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('assignOficios', () => {
+    it('should throw BadRequestException if assigning more than 3 principal oficios', async () => {
+      await expect(
+        service.assignOficios('worker-id', {
+          oficios: [
+            { oficioId: 'oficio-1', principal: true },
+            { oficioId: 'oficio-2', principal: true },
+            { oficioId: 'oficio-3', principal: true },
+            { oficioId: 'oficio-4', principal: true },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow assigning 3 or fewer principal oficios', async () => {
+      mockPerfilTrabajador.findUnique.mockResolvedValue({ id: 'perfil-id' });
+
+      const result = await service.assignOficios('worker-id', {
+        oficios: [
+          { oficioId: 'oficio-1', principal: true },
+          { oficioId: 'oficio-2', principal: true },
+          { oficioId: 'oficio-3', principal: false },
+        ],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+});

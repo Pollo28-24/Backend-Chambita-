@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { PublicacionesService } from './publicaciones.service';
 import { CreatePublicacionDto } from './dto/create-publicacion.dto';
 import { UpdatePublicacionDto } from './dto/update-publicacion.dto';
@@ -25,7 +35,12 @@ export class PublicacionesController {
     @Query('ubicacion') ubicacion?: string,
     @Query('estado') estado?: string,
   ) {
-    return this.publicacionesService.findAll({ oficioId, categoriaId, ubicacion, estado });
+    return this.publicacionesService.findAll({
+      oficioId,
+      categoriaId,
+      ubicacion,
+      estado,
+    });
   }
 
   @Get('mis-publicaciones')
@@ -41,7 +56,11 @@ export class PublicacionesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @GetUser('sub') clienteId: string, @Body() dto: UpdatePublicacionDto) {
+  update(
+    @Param('id') id: string,
+    @GetUser('sub') clienteId: string,
+    @Body() dto: UpdatePublicacionDto,
+  ) {
     return this.publicacionesService.update(id, clienteId, dto);
   }
 

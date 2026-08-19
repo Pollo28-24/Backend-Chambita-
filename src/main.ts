@@ -35,4 +35,4 @@ async function bootstrap() {
   console.log(`🚀 Chambita API corriendo en: http://localhost:${port}/api/v1`);
   console.log(`📘 Documentación Swagger en: http://localhost:${port}/api/docs`);
 }
-bootstrap();
+void bootstrap();
