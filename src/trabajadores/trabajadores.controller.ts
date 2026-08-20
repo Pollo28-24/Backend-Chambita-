@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TrabajadoresService } from './trabajadores.service';
 import { UpdatePerfilDto } from './dto/update-perfil.dto';
 import { AssignOficiosDto } from './dto/assign-oficios.dto';
@@ -18,7 +27,12 @@ export class TrabajadoresController {
     @Query('zona') zona?: string,
     @Query('disponible') disponible?: boolean,
   ) {
-    return this.trabajadoresService.findAll({ oficioId, categoriaId, zona, disponible });
+    return this.trabajadoresService.findAll({
+      oficioId,
+      categoriaId,
+      zona,
+      disponible,
+    });
   }
 
   @Get(':id')
@@ -29,14 +43,20 @@ export class TrabajadoresController {
   @Patch('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TRABAJADOR')
-  updatePerfil(@GetUser('sub') usuarioId: string, @Body() dto: UpdatePerfilDto) {
+  updatePerfil(
+    @GetUser('sub') usuarioId: string,
+    @Body() dto: UpdatePerfilDto,
+  ) {
     return this.trabajadoresService.updatePerfil(usuarioId, dto);
   }
 
   @Put('me/oficios')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TRABAJADOR')
-  assignOficios(@GetUser('sub') usuarioId: string, @Body() dto: AssignOficiosDto) {
+  assignOficios(
+    @GetUser('sub') usuarioId: string,
+    @Body() dto: AssignOficiosDto,
+  ) {
     return this.trabajadoresService.assignOficios(usuarioId, dto);
   }
 }
