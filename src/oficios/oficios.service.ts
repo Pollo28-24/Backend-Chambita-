@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOficioDto } from './dto/create-oficio.dto';
 import { UpdateOficioDto } from './dto/update-oficio.dto';
@@ -8,6 +12,16 @@ export class OficiosService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateOficioDto) {
+    // Validar que la categoría existe y está activa
+    const categoria = await this.prisma.categoria.findUnique({
+      where: { id: dto.categoriaId },
+    });
+    if (!categoria || !categoria.activo) {
+      throw new BadRequestException(
+        'La categoría seleccionada no existe o no está activa',
+      );
+    }
+
     return this.prisma.oficio.create({
       data: dto,
     });
@@ -40,6 +54,19 @@ export class OficiosService {
 
   async update(id: string, dto: UpdateOficioDto) {
     await this.findOne(id);
+
+    // Validar la categoría si se está actualizando categoriaId
+    if (dto.categoriaId) {
+      const categoria = await this.prisma.categoria.findUnique({
+        where: { id: dto.categoriaId },
+      });
+      if (!categoria || !categoria.activo) {
+        throw new BadRequestException(
+          'La categoría seleccionada no existe o no está activa',
+        );
+      }
+    }
+
     return this.prisma.oficio.update({
       where: { id },
       data: dto,

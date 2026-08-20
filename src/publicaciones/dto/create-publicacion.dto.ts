@@ -33,29 +33,3 @@ export class CreatePublicacionDto {
   presupuesto?: number;
 }
 
-export class UpdatePublicacionDto {
-  @IsString()
-  @IsOptional()
-  @Length(5, 150)
-  titulo?: string;
-
-  @IsString()
-  @IsOptional()
-  descripcion?: string;
-
-  @IsString()
-  @IsOptional()
-  @Length(2, 200)
-  ubicacion?: string;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  presupuesto?: number;
-
-  @IsEnum(['ABIERTA', 'EN_PROGRESO', 'COMPLETADA'], {
-    message: 'El estado debe ser ABIERTA, EN_PROGRESO o COMPLETADA',
-  })
-  @IsOptional()
-  estado?: 'ABIERTA' | 'EN_PROGRESO' | 'COMPLETADA';
-}

@@ -1,6 +1,5 @@
-export class UpdateOficioDto {
-  categoriaId?: string;
-  nombre?: string;
-  descripcion?: string;
-  activo?: boolean;
-}
+import { PartialType } from '@nestjs/swagger';
+import { CreateOficioDto } from './create-oficio.dto';
+
+export class UpdateOficioDto extends PartialType(CreateOficioDto) {}
+

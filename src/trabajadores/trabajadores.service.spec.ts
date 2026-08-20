@@ -18,9 +18,14 @@ describe('TrabajadoresService', () => {
     createMany: jest.fn(),
   };
 
+  const mockOficio = {
+    findMany: jest.fn(),
+  };
+
   const mockPrismaService = {
     perfilTrabajador: mockPerfilTrabajador,
     trabajadorOficio: mockTrabajadorOficio,
+    oficio: mockOficio,
     $transaction: jest.fn(),
   };
 
@@ -65,8 +70,29 @@ describe('TrabajadoresService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if one or more assigned oficios do not exist or are inactive', async () => {
+      mockPerfilTrabajador.findUnique.mockResolvedValue({ id: 'perfil-id' });
+      mockOficio.findMany.mockResolvedValue([
+        { id: 'oficio-1', activo: true },
+      ]); // Sólo se encuentra 1 oficio activo de los 2 asignados
+
+      await expect(
+        service.assignOficios('worker-id', {
+          oficios: [
+            { oficioId: 'oficio-1', principal: true },
+            { oficioId: 'oficio-2', principal: false },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('should allow assigning 3 or fewer principal oficios', async () => {
       mockPerfilTrabajador.findUnique.mockResolvedValue({ id: 'perfil-id' });
+      mockOficio.findMany.mockResolvedValue([
+        { id: 'oficio-1', activo: true },
+        { id: 'oficio-2', activo: true },
+        { id: 'oficio-3', activo: true },
+      ]);
 
       const result = await service.assignOficios('worker-id', {
         oficios: [

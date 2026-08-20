@@ -17,17 +17,3 @@ export class CreateCategoriaDto {
   descripcion?: string;
 }
 
-export class UpdateCategoriaDto {
-  @IsString()
-  @IsOptional()
-  @Length(2, 100)
-  nombre?: string;
-
-  @IsString()
-  @IsOptional()
-  descripcion?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
-}

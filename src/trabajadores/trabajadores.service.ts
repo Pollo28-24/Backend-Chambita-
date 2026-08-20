@@ -116,6 +116,23 @@ export class TrabajadoresService {
       throw new NotFoundException('Perfil de trabajador no encontrado');
     }
 
+    // Validar que todos los oficios que se van a asignar existen y están activos
+    if (dto.oficios.length > 0) {
+      const oficiosIds = dto.oficios.map((o) => o.oficioId);
+      const oficiosExistentes = await this.prisma.oficio.findMany({
+        where: {
+          id: { in: oficiosIds },
+          activo: true,
+        },
+      });
+
+      if (oficiosExistentes.length !== oficiosIds.length) {
+        throw new BadRequestException(
+          'Uno o más oficios asignados no existen o no están activos',
+        );
+      }
+    }
+
     return this.prisma.$transaction(async (tx) => {
       // Borrar oficios anteriores
       await tx.trabajadorOficio.deleteMany({
