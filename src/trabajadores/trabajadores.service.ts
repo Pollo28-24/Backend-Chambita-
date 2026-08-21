@@ -20,6 +20,9 @@ export class TrabajadoresService {
 
     const where: Prisma.PerfilTrabajadorWhereInput = {
       disponible: query.disponible,
+      usuario: {
+        is: { activo: true },
+      },
       zonaCobertura: query.zonaCobertura
         ? { contains: query.zonaCobertura }
         : undefined,

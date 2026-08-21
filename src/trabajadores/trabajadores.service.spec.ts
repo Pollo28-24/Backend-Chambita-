@@ -122,6 +122,7 @@ describe('TrabajadoresService', () => {
 
       const expectedWhere = {
         disponible: true,
+        usuario: { is: { activo: true } },
         oficios: {
           some: {
             oficio: { categoriaId: 'categoria-id' },

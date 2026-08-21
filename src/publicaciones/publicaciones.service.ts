@@ -28,10 +28,15 @@ export class PublicacionesService {
     // RN-05: Publicación ligada a oficio activo
     const oficio = await this.prisma.oficio.findUnique({
       where: { id: dto.oficioId },
+      include: {
+        categoria: {
+          select: { activo: true },
+        },
+      },
     });
-    if (!oficio || !oficio.activo) {
+    if (!oficio || !oficio.activo || !oficio.categoria.activo) {
       throw new BadRequestException(
-        'El oficio seleccionado no existe o no está activo',
+        'El oficio seleccionado no existe o su categoría no está activa',
       );
     }
 
