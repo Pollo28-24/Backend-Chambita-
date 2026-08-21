@@ -3,57 +3,88 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePerfilDto } from './dto/update-perfil.dto';
 import { AssignOficiosDto } from './dto/assign-oficios.dto';
+import { TrabajadorQueryDto } from './dto/trabajador-query.dto';
 
 @Injectable()
 export class TrabajadoresService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(query: {
-    oficioId?: string;
-    categoriaId?: string;
-    zona?: string;
-    disponible?: boolean;
-  }) {
-    return this.prisma.perfilTrabajador.findMany({
-      where: {
-        disponible:
-          query.disponible !== undefined ? query.disponible : undefined,
-        zonaCobertura: query.zona ? { contains: query.zona } : undefined,
-        oficios:
-          query.oficioId || query.categoriaId
-            ? {
-                some: {
-                  oficioId: query.oficioId || undefined,
-                  oficio: query.categoriaId
-                    ? {
-                        categoriaId: query.categoriaId,
-                      }
-                    : undefined,
+  async findAll(query: TrabajadorQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PerfilTrabajadorWhereInput = {
+      zonaCobertura: query.zonaCobertura
+        ? { contains: query.zonaCobertura }
+        : undefined,
+      oficios: query.oficioId
+        ? {
+            some: {
+              oficioId: query.oficioId,
+            },
+          }
+        : undefined,
+      OR: query.busqueda
+        ? [
+            { descripcion: { contains: query.busqueda } },
+            {
+              usuario: {
+                is: {
+                  nombre: { contains: query.busqueda },
                 },
-              }
-            : undefined,
-      },
-      include: {
-        usuario: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true,
-            email: true,
-            telefono: true,
-            fotoUrl: true,
+              },
+            },
+            {
+              usuario: {
+                is: {
+                  apellido: { contains: query.busqueda },
+                },
+              },
+            },
+          ]
+        : undefined,
+    };
+
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.perfilTrabajador.count({ where }),
+      this.prisma.perfilTrabajador.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          usuario: {
+            select: {
+              id: true,
+              nombre: true,
+              apellido: true,
+              email: true,
+              telefono: true,
+              fotoUrl: true,
+            },
+          },
+          oficios: {
+            include: {
+              oficio: true,
+            },
           },
         },
-        oficios: {
-          include: {
-            oficio: true,
-          },
-        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async findOne(id: string) {

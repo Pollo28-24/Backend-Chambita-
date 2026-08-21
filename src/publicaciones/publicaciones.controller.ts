@@ -12,6 +12,7 @@ import {
 import { PublicacionesService } from './publicaciones.service';
 import { CreatePublicacionDto } from './dto/create-publicacion.dto';
 import { UpdatePublicacionDto } from './dto/update-publicacion.dto';
+import { PublicacionQueryDto } from './dto/publicacion-query.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -29,18 +30,8 @@ export class PublicacionesController {
   }
 
   @Get()
-  findAll(
-    @Query('oficioId') oficioId?: string,
-    @Query('categoriaId') categoriaId?: string,
-    @Query('ubicacion') ubicacion?: string,
-    @Query('estado') estado?: string,
-  ) {
-    return this.publicacionesService.findAll({
-      oficioId,
-      categoriaId,
-      ubicacion,
-      estado,
-    });
+  findAll(@Query() query: PublicacionQueryDto) {
+    return this.publicacionesService.findAll(query);
   }
 
   @Get('mis-publicaciones')

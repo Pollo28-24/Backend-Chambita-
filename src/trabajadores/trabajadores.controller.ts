@@ -11,6 +11,7 @@ import {
 import { TrabajadoresService } from './trabajadores.service';
 import { UpdatePerfilDto } from './dto/update-perfil.dto';
 import { AssignOficiosDto } from './dto/assign-oficios.dto';
+import { TrabajadorQueryDto } from './dto/trabajador-query.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -21,18 +22,8 @@ export class TrabajadoresController {
   constructor(private readonly trabajadoresService: TrabajadoresService) {}
 
   @Get()
-  findAll(
-    @Query('oficioId') oficioId?: string,
-    @Query('categoriaId') categoriaId?: string,
-    @Query('zona') zona?: string,
-    @Query('disponible') disponible?: boolean,
-  ) {
-    return this.trabajadoresService.findAll({
-      oficioId,
-      categoriaId,
-      zona,
-      disponible,
-    });
+  findAll(@Query() query: TrabajadorQueryDto) {
+    return this.trabajadoresService.findAll(query);
   }
 
   @Get(':id')

@@ -7,7 +7,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePublicacionDto } from './dto/create-publicacion.dto';
 import { UpdatePublicacionDto } from './dto/update-publicacion.dto';
-import { PublicacionEstado } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { PublicacionQueryDto } from './dto/publicacion-query.dto';
 
 @Injectable()
 export class PublicacionesService {
@@ -48,42 +49,73 @@ export class PublicacionesService {
     });
   }
 
-  async findAll(query: {
-    oficioId?: string;
-    categoriaId?: string;
-    ubicacion?: string;
-    estado?: string;
-  }) {
-    return this.prisma.publicacion.findMany({
-      where: {
-        oficioId: query.oficioId || undefined,
-        oficio: query.categoriaId
-          ? { categoriaId: query.categoriaId }
+  async findAll(query: PublicacionQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PublicacionWhereInput = {
+      oficioId: query.oficioId || undefined,
+      oficio: query.categoriaId
+        ? { categoriaId: query.categoriaId }
+        : undefined,
+      estado: query.estado || undefined,
+      ubicacion: query.ubicacion
+        ? { contains: query.ubicacion }
+        : undefined,
+      presupuesto:
+        query.presupuestoMin !== undefined || query.presupuestoMax !== undefined
+          ? {
+              gte: query.presupuestoMin,
+              lte: query.presupuestoMax,
+            }
           : undefined,
-        ubicacion: query.ubicacion ? { contains: query.ubicacion } : undefined,
-        estado: query.estado ? (query.estado as PublicacionEstado) : undefined,
-      },
-      include: {
-        cliente: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true,
-            telefono: true,
-            fotoUrl: true,
+      OR: query.busqueda
+        ? [
+            { titulo: { contains: query.busqueda } },
+            { descripcion: { contains: query.busqueda } },
+          ]
+        : undefined,
+    };
+
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.publicacion.count({ where }),
+      this.prisma.publicacion.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          cliente: {
+            select: {
+              id: true,
+              nombre: true,
+              apellido: true,
+              telefono: true,
+              fotoUrl: true,
+            },
           },
-        },
-        oficio: {
-          include: {
-            categoria: true,
+          oficio: {
+            include: {
+              categoria: true,
+            },
           },
+          resena: true,
         },
-        resena: true,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   async findOne(id: string) {
