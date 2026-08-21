@@ -10,6 +10,7 @@ describe('TrabajadoresService', () => {
     findUnique: jest.fn(),
     findMany: jest.fn(),
     findFirst: jest.fn(),
+    count: jest.fn(),
     update: jest.fn(),
   };
 
@@ -103,6 +104,39 @@ describe('TrabajadoresService', () => {
       });
 
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('findAll', () => {
+    it('should filter workers by category and availability', async () => {
+      mockPerfilTrabajador.count.mockResolvedValue(0);
+      mockPerfilTrabajador.findMany.mockResolvedValue([]);
+      mockPrismaService.$transaction.mockResolvedValueOnce([0, []]);
+
+      await service.findAll({
+        categoriaId: 'categoria-id',
+        disponible: true,
+        page: 1,
+        limit: 10,
+      });
+
+      const expectedWhere = {
+        disponible: true,
+        oficios: {
+          some: {
+            oficio: { categoriaId: 'categoria-id' },
+          },
+        },
+      };
+
+      expect(mockPerfilTrabajador.count).toHaveBeenCalledWith({
+        where: expect.objectContaining(expectedWhere),
+      });
+      expect(mockPerfilTrabajador.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining(expectedWhere),
+        }),
+      );
     });
   });
 });

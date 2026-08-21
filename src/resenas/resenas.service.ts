@@ -36,6 +36,11 @@ export class ResenasService {
         'Solo el cliente propietario de la publicación puede calificar',
       );
     }
+    if (publicacion.estado !== 'COMPLETADA') {
+      throw new BadRequestException(
+        'Solo se pueden calificar publicaciones completadas',
+      );
+    }
 
     // Verificar que no se haya calificado antes la publicación
     const resenaExistente = await this.prisma.resena.findUnique({

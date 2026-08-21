@@ -19,16 +19,21 @@ export class TrabajadoresService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.PerfilTrabajadorWhereInput = {
+      disponible: query.disponible,
       zonaCobertura: query.zonaCobertura
         ? { contains: query.zonaCobertura }
         : undefined,
-      oficios: query.oficioId
-        ? {
-            some: {
-              oficioId: query.oficioId,
-            },
-          }
-        : undefined,
+      oficios:
+        query.oficioId || query.categoriaId
+          ? {
+              some: {
+                oficioId: query.oficioId,
+                oficio: query.categoriaId
+                  ? { categoriaId: query.categoriaId }
+                  : undefined,
+              },
+            }
+          : undefined,
       OR: query.busqueda
         ? [
             { descripcion: { contains: query.busqueda } },

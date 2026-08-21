@@ -76,5 +76,20 @@ describe('ResenasService', () => {
         }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw BadRequestException if the publication is not completed', async () => {
+      mockPrismaService.publicacion.findUnique.mockResolvedValue({
+        clienteId: 'cliente-id',
+        estado: 'ABIERTA',
+      });
+
+      await expect(
+        service.create('cliente-id', {
+          trabajadorId: 'trabajador-id',
+          publicacionId: 'pub-id',
+          calificacion: 5,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

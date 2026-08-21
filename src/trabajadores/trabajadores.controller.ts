@@ -39,11 +39,25 @@ export class TrabajadoresController {
     example: '7a62b8ab-43c2-4f1e-bfaa-e5f03d3a5019',
   })
   @ApiQuery({
+    name: 'categoriaId',
+    required: false,
+    type: String,
+    description: 'ID de la categoría del oficio del trabajador.',
+    example: '8d8a4e98-50ba-4d99-a120-6b5d61ab8a94',
+  })
+  @ApiQuery({
     name: 'zonaCobertura',
     required: false,
     type: String,
     description: 'Zona de cobertura del trabajador.',
     example: 'Zapopan',
+  })
+  @ApiQuery({
+    name: 'disponible',
+    required: false,
+    type: Boolean,
+    description: 'Filtrar trabajadores disponibles.',
+    example: true,
   })
   @ApiQuery({
     name: 'page',

@@ -132,7 +132,7 @@ model Resena {
   clienteId     String      @map("cliente_id") @db.Char(36)
   trabajadorId  String      @map("trabajador_id") @db.Char(36)
   publicacionId String      @unique @map("publicacion_id") @db.Char(36)
-  calificacion  Int         @db.SmallInt
+  calificacion  Int         @db.TinyInt
   comentario    String?     @db.Text
   createdAt     DateTime    @default(now()) @map("created_at") @db.DateTime(3)
 
