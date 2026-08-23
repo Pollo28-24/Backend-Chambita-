@@ -139,7 +139,6 @@ export class AuthService {
         secret: process.env.JWT_SECRET || 'secreto_chambitas_2026',
       })) as unknown as { sub: string; email: string; rol: string };
 
-      // Buscar el refresh token en la base de datos para verificar que no esté revocado
       const dbTokens = await this.prisma.refreshToken.findMany({
         where: {
           usuarioId: payload.sub,
@@ -148,29 +147,45 @@ export class AuthService {
         },
       });
 
-      // Comparar hash del token recibido con los guardados
-      let matchedTokenId: string | null = null;
+      let matchedToken: { id: string; tokenHash: string } | null = null;
       for (const token of dbTokens) {
         const isMatched = await bcrypt.compare(refreshToken, token.tokenHash);
         if (isMatched) {
-          matchedTokenId = token.id;
+          matchedToken = token;
           break;
         }
       }
 
-      if (!matchedTokenId) {
+      if (!matchedToken) {
         throw new UnauthorizedException('Refresh token inválido o revocado');
       }
 
-      // Generar nuevo access token
       const newPayload = {
         sub: payload.sub,
         email: payload.email,
         rol: payload.rol,
       };
-      const accessToken = await this.jwtService.signAsync(newPayload);
 
-      return { accessToken };
+      const accessToken = await this.jwtService.signAsync(newPayload);
+      const newRefreshTokenValue = await this.jwtService.signAsync(newPayload, {
+        expiresIn: '7d',
+      });
+      const newRefreshTokenHash = await bcrypt.hash(newRefreshTokenValue, 10);
+
+      await this.prisma.refreshToken.update({
+        where: { id: matchedToken.id },
+        data: { revokedAt: new Date() },
+      });
+
+      await this.prisma.refreshToken.create({
+        data: {
+          usuarioId: payload.sub,
+          tokenHash: newRefreshTokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      return { accessToken, refreshToken: newRefreshTokenValue };
     } catch {
       throw new UnauthorizedException('Refresh token expirado o inválido');
     }

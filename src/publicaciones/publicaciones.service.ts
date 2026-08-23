@@ -185,6 +185,28 @@ export class PublicacionesService {
       );
     }
 
+    if (dto.estado) {
+      const transicionesValidas: Record<string, string[]> = {
+        ABIERTA: ['EN_PROGRESO'],
+        EN_PROGRESO: ['COMPLETADA'],
+        COMPLETADA: [],
+      };
+
+      const estadoActual = publicacion.estado;
+      const siguienteEstado = dto.estado;
+      const estadosPermitidos = transicionesValidas[estadoActual] ?? [];
+
+      if (
+        estadoActual !== siguienteEstado &&
+        !estadosPermitidos.includes(siguienteEstado)
+      ) {
+        throw new BadRequestException(
+          `No se puede cambiar el estado de ${estadoActual} a ${siguienteEstado}.`+
+            ' La secuencia válida es ABIERTA -> EN_PROGRESO -> COMPLETADA.',
+        );
+      }
+    }
+
     return this.prisma.publicacion.update({
       where: { id },
       data: {
