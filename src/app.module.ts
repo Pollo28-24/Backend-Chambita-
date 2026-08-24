@@ -10,12 +10,13 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { OficiosModule } from './oficios/oficios.module';
 import { PublicacionesModule } from './publicaciones/publicaciones.module';
 import { ResenasModule } from './resenas/resenas.module';
+import { getJwtSecret } from './common/config/jwt-secret';
 
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'secreto_chambitas_2026',
+      secret: getJwtSecret(),
       signOptions: { expiresIn: '1d' },
     }),
     PrismaModule,

@@ -9,6 +9,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { getJwtSecret } from '../common/config/jwt-secret';
 
 @Injectable()
 export class AuthService {
@@ -136,7 +137,7 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     try {
       const payload = (await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_SECRET || 'secreto_chambitas_2026',
+        secret: getJwtSecret(),
       })) as unknown as { sub: string; email: string; rol: string };
 
       const dbTokens = await this.prisma.refreshToken.findMany({

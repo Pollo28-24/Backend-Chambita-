@@ -8,6 +8,10 @@ import { PrismaService } from '../prisma/prisma.service';
 describe('AuthService', () => {
   let service: AuthService;
 
+  beforeAll(() => {
+    process.env.JWT_SECRET = 'test-jwt-secret';
+  });
+
   const mockPrismaService = {
     usuario: {
       findUnique: jest.fn(),

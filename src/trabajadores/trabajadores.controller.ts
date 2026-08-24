@@ -78,6 +78,7 @@ export class TrabajadoresController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.trabajadoresService.findOne(id);
   }

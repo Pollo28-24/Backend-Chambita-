@@ -111,7 +111,8 @@ export class PublicacionesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CLIENTE')
   update(
     @Param('id') id: string,
     @GetUser('sub') clienteId: string,
@@ -121,7 +122,8 @@ export class PublicacionesController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CLIENTE')
   remove(@Param('id') id: string, @GetUser('sub') clienteId: string) {
     return this.publicacionesService.remove(id, clienteId);
   }
