@@ -17,7 +17,12 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { GetUser } from '../common/decorators/get-user.decorator';
-import { ApiQuery } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PublicacionEstado } from '@prisma/client';
 
 @Controller('publicaciones')
@@ -32,6 +37,30 @@ export class PublicacionesController {
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'Listar publicaciones con filtros y paginación',
+  })
+  @ApiOkResponse({
+    description: 'Listado paginado de publicaciones.',
+    schema: {
+      example: {
+        success: true,
+        statusCode: 200,
+        data: [{ id: 'pub-1', titulo: 'Reparación de tuberías' }],
+        meta: {
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+        },
+        timestamp: '2026-08-24T22:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Parámetros de consulta inválidos.',
+  })
   @ApiQuery({
     name: 'busqueda',
     required: false,
